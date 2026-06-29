@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>World Cup 2026 · Bracket Predictor</title>
 <style>
+   .flag{
+    background:#111;
+    border:1px solid #D4AF37;
+    border-radius:5px;
+    padding:2px 6px;
+    color:#D4AF37;
+    font-size:10px;
+    font-weight:bold;
+}
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -154,12 +163,15 @@ body { font-family:'Inter', sans-serif; }
 
 <script>
 const FLAG = {
-  BRA:'????',JPN:'????',GHA:'????',PAN:'????',MEX:'????',ECU:'????',
-  ENG:'??????????????',COD:'????',GER:'????',PAR:'????',ARG:'????',AUT:'????',
-  ESP:'????',CPV:'????',FRA:'????',SWE:'????',NED:'????',MAR:'????',
-  BEL:'????',SEN:'????',NOR:'????',CIV:'????',POR:'????',CRO:'????',
-  USA:'????',BIH:'????',CAN:'????',RSA:'????',URU:'????',KSA:'????',
-  COL:'????',UZB:'????',AUS:'????',EGY:'????',SUI:'????',ALG:'????'
+BRA:'BRA', JPN:'JPN', GHA:'GHA', PAN:'PAN',
+MEX:'MEX', ECU:'ECU', ENG:'ENG', COD:'COD',
+GER:'GER', PAR:'PAR', ARG:'ARG', AUT:'AUT',
+ESP:'ESP', CPV:'CPV', FRA:'FRA', SWE:'SWE',
+NED:'NED', MAR:'MAR', BEL:'BEL', SEN:'SEN',
+NOR:'NOR', CIV:'CIV', POR:'POR', CRO:'CRO',
+USA:'USA', BIH:'BIH', CAN:'CAN', RSA:'RSA',
+URU:'URU', KSA:'KSA', COL:'COL', UZB:'UZB',
+AUS:'AUS', EGY:'EGY', SUI:'SUI', ALG:'ALG'
 };
 const NAME = {
   BRA:'Brazil',JPN:'Japan',GHA:'Ghana',PAN:'Panama',MEX:'Mexico',ECU:'Ecuador',
