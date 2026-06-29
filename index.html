@@ -1,0 +1,364 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>World Cup 2026 · Bracket Predictor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #060D16;
+  --surface: #0C1824;
+  --card:    #101F30;
+  --border:  #1C3048;
+  --gold:    #D4A843;
+  --gold2:   #F5CC6A;
+  --green:   #28C76F;
+  --dim:     #3A5470;
+  --text:    #D8E8F4;
+  --muted:   #5A7A96;
+  --red:     #E05050;
+}
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); }
+body { font-family:'Inter', sans-serif; }
+
+#topbar {
+  position:fixed; top:0; left:0; right:0; height:44px; z-index:200;
+  background:rgba(6,13,22,0.97); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+}
+#topbar h1 {
+  font-family:'Barlow Condensed', sans-serif;
+  font-size:0.85rem; font-weight:900; letter-spacing:2px; text-transform:uppercase;
+  background:linear-gradient(90deg, var(--gold), var(--gold2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+#topbar .reset-btn {
+  font-family:'Inter', sans-serif; font-size:0.65rem; font-weight:600;
+  padding:5px 12px; border-radius:5px; cursor:pointer;
+  border:1px solid rgba(224,80,80,0.4); background:rgba(224,80,80,0.1); color:var(--red);
+  letter-spacing:0.5px; transition:background 0.15s;
+}
+#topbar .reset-btn:hover { background:rgba(224,80,80,0.2); }
+
+#viewport {
+  position:fixed; top:44px; left:0; right:0; bottom:0;
+  overflow:scroll; -webkit-overflow-scrolling:touch;
+}
+
+#bracket {
+  display:grid;
+  grid-template-columns: 142px 14px 142px 14px 142px 14px 142px 14px 158px 14px 142px 14px 142px 14px 142px 14px 142px;
+  min-width: max-content;
+  padding: 14px 18px 50px;
+  align-items: start;
+}
+
+.round { display:flex; flex-direction:column; }
+.round-title {
+  font-family:'Barlow Condensed', sans-serif;
+  font-size:0.6rem; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); text-align:center;
+  padding:4px 4px 8px; border-bottom:1px solid rgba(212,168,67,0.2);
+  white-space:nowrap;
+}
+.slots { display:flex; flex-direction:column; flex:1; }
+.slot { flex:1; display:flex; align-items:center; justify-content:center; padding:5px 3px; }
+
+.card {
+  width:136px; background:var(--card);
+  border:1px solid var(--border); border-radius:8px; overflow:hidden;
+}
+.card-label {
+  font-size:0.48rem; color:var(--muted); text-align:center;
+  padding:2px 6px; background:var(--surface);
+  border-bottom:1px solid var(--border); letter-spacing:0.4px; white-space:nowrap;
+}
+.card-div { height:1px; background:var(--border); }
+
+.team-btn {
+  width:100%; padding:7px 8px; border:none; background:transparent;
+  color:var(--text); font-family:'Inter', sans-serif; font-size:0.69rem; font-weight:500;
+  cursor:pointer; text-align:left; display:flex; align-items:center; gap:6px;
+  min-height:34px; transition:background 0.12s; -webkit-tap-highlight-color:transparent;
+}
+.team-btn:active { background:#182A3C; }
+.team-btn.chosen { background:rgba(212,168,67,0.14); color:var(--gold2); font-weight:700; }
+.team-btn .flag { font-size:1rem; flex-shrink:0; line-height:1; }
+.team-btn .name { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.tbd {
+  width:100%; padding:7px 8px; min-height:34px; display:flex; align-items:center; gap:6px;
+  color:var(--dim); font-size:0.62rem; font-style:italic;
+}
+
+.wait-card {
+  width:136px; background:var(--surface);
+  border:1px dashed var(--border); border-radius:8px;
+  padding:11px 8px; text-align:center;
+  color:var(--dim); font-size:0.56rem; font-style:italic; line-height:1.4;
+}
+
+.center-col {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 4px;
+}
+.center-title {
+  font-family:'Barlow Condensed', sans-serif;
+  font-size:0.6rem; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); text-align:center;
+  padding:4px 4px 8px; border-bottom:1px solid rgba(212,168,67,0.2);
+  width:100%; margin-bottom:16px; white-space:nowrap;
+}
+.grand-final-card {
+  width:150px; background:var(--card);
+  border:1px solid var(--gold); border-radius:9px; overflow:hidden;
+}
+.grand-final-card .card-label { background:#0F1E2E; border-color:rgba(212,168,67,0.3); }
+.champion-box {
+  width:150px; margin-top:12px; padding:12px 14px; text-align:center;
+  background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.03));
+  border:1px solid var(--gold); border-radius:10px;
+}
+.champion-box .c-label {
+  font-size:0.5rem; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); margin-bottom:6px; font-family:'Barlow Condensed', sans-serif; font-weight:700;
+}
+.champion-box .c-flag { font-size:1.9rem; display:block; margin-bottom:4px; }
+.champion-box .c-name { font-size:0.9rem; font-weight:700; color:var(--gold2); font-family:'Barlow Condensed', sans-serif; letter-spacing:1px; }
+.champion-box .c-empty { color:var(--dim); font-size:0.65rem; font-style:italic; }
+
+#bottom {
+  padding:14px 18px 28px; border-top:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+#bottom .b-title {
+  font-family:'Barlow Condensed', sans-serif;
+  font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#CD8B3A;
+}
+#bottom .b-row { display:flex; gap:12px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>? World Cup 2026 — Bracket Predictor</h1>
+  <button class="reset-btn" onclick="resetAll()">? Reset All</button>
+</div>
+
+<div id="viewport">
+  <div id="bracket"></div>
+  <div id="bottom"></div>
+</div>
+
+<script>
+const FLAG = {
+  BRA:'????',JPN:'????',GHA:'????',PAN:'????',MEX:'????',ECU:'????',
+  ENG:'??????????????',COD:'????',GER:'????',PAR:'????',ARG:'????',AUT:'????',
+  ESP:'????',CPV:'????',FRA:'????',SWE:'????',NED:'????',MAR:'????',
+  BEL:'????',SEN:'????',NOR:'????',CIV:'????',POR:'????',CRO:'????',
+  USA:'????',BIH:'????',CAN:'????',RSA:'????',URU:'????',KSA:'????',
+  COL:'????',UZB:'????',AUS:'????',EGY:'????',SUI:'????',ALG:'????'
+};
+const NAME = {
+  BRA:'Brazil',JPN:'Japan',GHA:'Ghana',PAN:'Panama',MEX:'Mexico',ECU:'Ecuador',
+  ENG:'England',COD:'Congo DR',GER:'Germany',PAR:'Paraguay',ARG:'Argentina',AUT:'Austria',
+  ESP:'Spain',CPV:'C.Verde',FRA:'France',SWE:'Sweden',NED:'Netherlands',MAR:'Morocco',
+  BEL:'Belgium',SEN:'Senegal',NOR:'Norway',CIV:'Ivory Cst',POR:'Portugal',CRO:'Croatia',
+  USA:'USA',BIH:'Bosnia',CAN:'Canada',RSA:'S.Africa',URU:'Uruguay',KSA:'Saudi Arb',
+  COL:'Colombia',UZB:'Uzbekistan',AUS:'Australia',EGY:'Egypt',SUI:'Switzerland',ALG:'Algeria'
+};
+
+// ?? R32: 16 matches, zero pre-fills, all manual ??
+const R32 = [
+  // LEFT [0-7]
+  {id:'a0', A:'GER', B:'PAR', date:'Jun 29'},
+  {id:'a1', A:'FRA', B:'SWE', date:'Jun 30'},
+  {id:'a2', A:'RSA', B:'CAN', date:'Jun 28'},
+  {id:'a3', A:'NED', B:'MAR', date:'Jun 30'},
+  {id:'a4', A:'POR', B:'CRO', date:'Jul 1'},
+  {id:'a5', A:'ESP', B:'AUT', date:'Jun 28'},
+  {id:'a6', A:'USA', B:'BIH', date:'Jul 2'},
+  {id:'a7', A:'BEL', B:'SEN', date:'Jul 1'},
+  // RIGHT [8-15]
+  {id:'b0', A:'BRA', B:'JPN', date:'Jun 29'},
+  {id:'b1', A:'CIV', B:'NOR', date:'Jun 30'},
+  {id:'b2', A:'MEX', B:'ECU', date:'Jul 1'},
+  {id:'b3', A:'ENG', B:'COD', date:'Jul 1'},
+  {id:'b4', A:'ARG', B:'CPV', date:'Jun 27'},
+  {id:'b5', A:'AUS', B:'EGY', date:'Jun 28'},
+  {id:'b6', A:'SUI', B:'ALG', date:'Jun 29'},
+  {id:'b7', A:'COL', B:'GHA', date:'Jun 27'},
+];
+
+const picks = {};
+
+function get(id)    { return picks[id] || null; }
+function resetAll() { Object.keys(picks).forEach(k => delete picks[k]); render(); }
+
+function choose(matchId, team) {
+  if (picks[matchId] === team) { delete picks[matchId]; }
+  else { picks[matchId] = team; }
+  render();
+}
+
+function prune(id, optA, optB) {
+  const p = picks[id];
+  const valid = [optA, optB].filter(Boolean);
+  if (p && !valid.includes(p)) delete picks[id];
+}
+
+function teamRow(matchId, team, isClickable) {
+  if (!team) return `<div class="tbd"><span style="font-size:0.9rem">?</span> TBD</div>`;
+  const picked = picks[matchId] === team;
+  const cls = picked ? 'team-btn chosen' : 'team-btn';
+  const onclick = isClickable ? `onclick="choose('${matchId}','${team}')"` : '';
+  return `<button class="${cls}" ${onclick}>
+    <span class="flag">${FLAG[team] || '???'}</span>
+    <span class="name">${NAME[team] || team}</span>
+  </button>`;
+}
+
+function matchCard(matchId, teamA, teamB, label) {
+  if (!teamA && !teamB) return `<div class="wait-card">?<br>Awaiting<br>results</div>`;
+  return `<div class="card">
+    <div class="card-label">${label}</div>
+    ${teamRow(matchId, teamA, !!teamA)}
+    <div class="card-div"></div>
+    ${teamRow(matchId, teamB, !!teamB)}
+  </div>`;
+}
+
+function roundCol(title, matchDefs) {
+  const slots = matchDefs.map(m =>
+    `<div class="slot">${matchCard(m.id, m.A, m.B, m.label)}</div>`
+  ).join('');
+  return `<div class="round">
+    <div class="round-title">${title}</div>
+    <div class="slots">${slots}</div>
+  </div>`;
+}
+
+function grandFinalCard(t1, t2, champion) {
+  const gfHtml = matchCard('gf', t1, t2, 'Grand Final · Jul 19');
+  const champHtml = champion
+    ? `<div class="champion-box">
+        <div class="c-label">?? World Champion</div>
+        <span class="c-flag">${FLAG[champion] || '??'}</span>
+        <div class="c-name">${NAME[champion] || champion}</div>
+       </div>`
+    : `<div class="champion-box" style="opacity:0.25">
+        <div class="c-label">Champion</div>
+        <span class="c-flag">??</span>
+        <div class="c-empty">Pick your winner</div>
+       </div>`;
+  return `<div class="center-col">
+    <div class="center-title">?? Grand Final</div>
+    ${gfHtml}
+    ${champHtml}
+  </div>`;
+}
+
+function render() {
+  const r = R32.map(m => get(m.id));
+
+  const qfL = [
+    {id:'ql0', A:r[0], B:r[1], date:'Jul 4'},
+    {id:'ql1', A:r[2], B:r[3], date:'Jul 4'},
+    {id:'ql2', A:r[4], B:r[5], date:'Jul 5'},
+    {id:'ql3', A:r[6], B:r[7], date:'Jul 5'},
+  ];
+  const qfR = [
+    {id:'qr0', A:r[8],  B:r[9],  date:'Jul 6'},
+    {id:'qr1', A:r[10], B:r[11], date:'Jul 6'},
+    {id:'qr2', A:r[12], B:r[13], date:'Jul 7'},
+    {id:'qr3', A:r[14], B:r[15], date:'Jul 7'},
+  ];
+  [...qfL, ...qfR].forEach(m => prune(m.id, m.A, m.B));
+  const ql = qfL.map(m => get(m.id));
+  const qr = qfR.map(m => get(m.id));
+
+  const sfL = [
+    {id:'sl0', A:ql[0], B:ql[1], date:'Jul 11'},
+    {id:'sl1', A:ql[2], B:ql[3], date:'Jul 12'},
+  ];
+  const sfR = [
+    {id:'sr0', A:qr[0], B:qr[1], date:'Jul 14'},
+    {id:'sr1', A:qr[2], B:qr[3], date:'Jul 15'},
+  ];
+  [...sfL, ...sfR].forEach(m => prune(m.id, m.A, m.B));
+  const sl = sfL.map(m => get(m.id));
+  const sr = sfR.map(m => get(m.id));
+
+  const fL = {id:'fl', A:sl[0], B:sl[1], date:'Jul 18'};
+  const fR = {id:'fr', A:sr[0], B:sr[1], date:'Jul 18'};
+  prune('fl', fL.A, fL.B); prune('fr', fR.A, fR.B);
+  const flW = get('fl'), frW = get('fr');
+
+  prune('gf', flW, frW);
+  const champion = get('gf');
+
+  function loser(m, winner) {
+    if (!winner) return null;
+    return m.A === winner ? m.B : m.A;
+  }
+  const tp0 = {id:'tp0', A:loser(sfL[0],sl[0]), B:loser(sfL[1],sl[1]), date:'Jul 18'};
+  const tp1 = {id:'tp1', A:loser(sfR[0],sr[0]), B:loser(sfR[1],sr[1]), date:'Jul 18'};
+  prune('tp0', tp0.A, tp0.B); prune('tp1', tp1.A, tp1.B);
+
+  function r32def(m) { return {id:m.id, A:m.A, B:m.B, label:m.date}; }
+  function def(m)    { return {id:m.id, A:m.A, B:m.B, label:m.date}; }
+
+  const cols = [
+    { col:1,  html: roundCol('Round of 32',  R32.slice(0,8).map(r32def)) },
+    { col:3,  html: roundCol('Quarterfinals', qfL.map(def)) },
+    { col:5,  html: roundCol('Semifinals',    sfL.map(def)) },
+    { col:7,  html: roundCol('Final A',       [def(fL)]) },
+    { col:9,  html: grandFinalCard(flW, frW, champion) },
+    { col:11, html: roundCol('Final B',       [def(fR)]) },
+    { col:13, html: roundCol('Semifinals',    sfR.map(def)) },
+    { col:15, html: roundCol('Quarterfinals', qfR.map(def)) },
+    { col:17, html: roundCol('Round of 32',  R32.slice(8,16).map(r32def)) },
+  ];
+
+  document.getElementById('bracket').innerHTML = cols
+    .map(c => `<div style="grid-column:${c.col}">${c.html}</div>`)
+    .join('');
+
+  document.getElementById('bottom').innerHTML =
+    `<div class="b-title">?? Third Place Playoff · Jul 18</div>
+     <div class="b-row">
+       ${matchCard('tp0', tp0.A, tp0.B, 'Jul 18')}
+       ${matchCard('tp1', tp1.A, tp1.B, 'Jul 18')}
+     </div>`;
+}
+
+(function() {
+  const el = document.getElementById('viewport');
+  let startX, startY, scrollL, scrollT, dragging = false;
+  el.addEventListener('touchstart', e => {
+    startX=e.touches[0].pageX; startY=e.touches[0].pageY;
+    scrollL=el.scrollLeft; scrollT=el.scrollTop;
+  }, {passive:true});
+  el.addEventListener('touchmove', e => {
+    el.scrollLeft=scrollL-(e.touches[0].pageX-startX);
+    el.scrollTop=scrollT-(e.touches[0].pageY-startY);
+  }, {passive:true});
+  el.addEventListener('mousedown', e => {
+    if (e.target.tagName==='BUTTON') return;
+    dragging=true; startX=e.pageX; startY=e.pageY;
+    scrollL=el.scrollLeft; scrollT=el.scrollTop; el.style.cursor='grabbing';
+  });
+  document.addEventListener('mouseup', () => { dragging=false; el.style.cursor=''; });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    el.scrollLeft=scrollL-(e.pageX-startX);
+    el.scrollTop=scrollT-(e.pageY-startY);
+  });
+})();
+
+render();
+</script>
+</body>
+</html>
